@@ -263,7 +263,8 @@ OSD.initData = function () {
         preview_logo: true,
         preview: [],
         tooltips: [],
-        osd_profiles: {}
+        osd_profiles: {},
+        overlay_mode: null,
     };
 };
 OSD.initData();
@@ -1502,9 +1503,9 @@ OSD.msp = {
                     result.push32(warningFlags);
 
                     result.push8(OSD.data.osd_profiles.selected + 1);
+                    result.push8(OSD.data.overlay_mode);
                 }
                 if (semver.gte(CONFIG.apiVersion, "1.42.0")) {
-                    result.push8(0);    // unused overlay_radio_mode
                     result.push8(OSD.data.alarms.link_quality.value);
                 }
             }
@@ -1653,6 +1654,7 @@ OSD.msp = {
         if (semver.gte(CONFIG.apiVersion, "1.41.0")) {
             d.osd_profiles.number = view.readU8();
             d.osd_profiles.selected = view.readU8() - 1;
+            d.overlay_mode = view.readU8();
         } else {
             d.osd_profiles.number = 1;
             d.osd_profiles.selected = 0;
@@ -1660,7 +1662,6 @@ OSD.msp = {
 
         // Link Quality Alarm
         if (semver.gte(CONFIG.apiVersion, "1.42.0")) {
-            var tmp = view.readU8();    // unused overlay_radio_mode
             d.alarms['link_quality'] = { display_name: 'Link Quality', value: view.readU8() };
         }
 
