@@ -1107,8 +1107,15 @@ OSD.constants = {
         GPS_RESCUE_DISABLED: {
             name: 'GPS_RESCUE_DISABLED',
             desc: 'osdWarningGpsRescueDisabled'
-        }
-
+        },
+        RSSI: {
+            name: 'RSSI',
+            desc: 'osdWarningRSSI'
+        },
+        LINK_QUALITY: {
+            name: 'LINK_QUALITY',
+            desc: 'osdWarningLinkQuality'
+        },
     },
     FONT_TYPES: [
         { file: "default", name: "Default" },
@@ -1365,6 +1372,12 @@ OSD.chooseFields = function () {
             F.GPS_RESCUE_DISABLED
         ]);
     }
+    if (semver.gte(CONFIG.apiVersion, "1.42.0")) {
+        OSD.constants.WARNINGS = OSD.constants.WARNINGS.concat([
+            F.RSSI,
+            F.LINK_QUALITY
+        ]);
+    }
 };
 
 OSD.updateDisplaySize = function () {
@@ -1489,6 +1502,10 @@ OSD.msp = {
                     result.push32(warningFlags);
 
                     result.push8(OSD.data.osd_profiles.selected + 1);
+                }
+                if (semver.gte(CONFIG.apiVersion, "1.42.0")) {
+                    result.push8(0);    // unused overlay_radio_mode
+                    result.push8(OSD.data.alarms.link_quality.value);
                 }
             }
             
@@ -1639,6 +1656,12 @@ OSD.msp = {
         } else {
             d.osd_profiles.number = 1;
             d.osd_profiles.selected = 0;
+        }
+
+        // Link Quality Alarm
+        if (semver.gte(CONFIG.apiVersion, "1.42.0")) {
+            var tmp = view.readU8();    // unused overlay_radio_mode
+            d.alarms['link_quality'] = { display_name: 'Link Quality', value: view.readU8() };
         }
 
         // Now we have the number of profiles, process the OSD elements
